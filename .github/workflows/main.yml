@@ -26,21 +26,24 @@ jobs:
       run: dotnet build --configuration Release --no-restore
 
     - name: Publish
-      # Vi pekar direkt på projektfilen för att undvika output-fel
+      # Vi publicerar bara själva API-projektet för att undvika problem med test-filer
       run: dotnet publish EncryptionApi/EncryptionApi.csproj -c Release -o ./publish
 
     - name: Zip artifact
       run: cd ./publish && zip -r ../deploy.zip .
 
     - name: Deploy to Elastic Beanstalk
-      uses: einaregilsson/beanstalk-deploy@v21
+      uses: einaregilsson/beanstalk-deploy@v22
       with:
         aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         application_name: ExamProject
         environment_name: ExamProject-env-env
-        version_label: "ver-${{ github.run_id }}-${{ github.run_number }}"
+        # Vi skapar en unik version baserat på körningens nummer
+        version_label: "app-v${{ github.run_number }}-${{ github.run_id }}"
         region: eu-north-1
         deployment_package: deploy.zip
+        # Dessa inställningar är kritiska för att det ska fungera:
+        use_existing_version_if_available: true
         wait_for_deployment: true
         wait_for_environment_recovery: true

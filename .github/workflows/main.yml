@@ -58,6 +58,7 @@ jobs:
         aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         application_name: ExamProject
         environment_name: ExamProject-env-env
-        version_label: "ver-${{ github.sha }}-${{ github.run_id }}"
+        # Vi använder run_id och run_attempt för att garantera ett unikt versionsnamn
+        version_label: "v-${{ github.run_id }}-${{ github.run_attempt }}"
         region: eu-north-1
         deployment_package: deploy.zip

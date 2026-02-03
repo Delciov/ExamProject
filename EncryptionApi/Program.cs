@@ -1,24 +1,33 @@
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// L�gg till st�d f�r Controllers
+// Lägg till stöd för Controllers
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Aktivera Swagger s� du kan testa APIet enkelt
-if (app.Environment.IsDevelopment())
+// VIKTIGT: Vi tog bort "if (IsDevelopment)" så Swagger visas även i AWS!
+app.UseSwagger();
+app.UseSwaggerUI(options =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+    options.RoutePrefix = "swagger"; // Swagger ligger på /swagger
+});
 
-app.UseHttpsRedirection();
+// Vi stänger av denna tillfälligt för att undvika problem med AWS-proxyn
+// app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
-// Mappa dina controllers s� de hittas
+// Mappa dina controllers
 app.MapControllers();
+
+// Lägg till en startsida så vi ser att servern lever direkt
+app.MapGet("/", () => "Servern lever! Gå till /swagger eller /api/cipher/encrypt?text=hej");
 
 app.Run();

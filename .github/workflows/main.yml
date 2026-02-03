@@ -11,33 +11,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
 
-    - name: Restore
+    - name: Restore dependencies
       run: dotnet restore
 
     - name: Build
       run: dotnet build --configuration Release --no-restore
 
     - name: Publish
-      # Här ändrar vi så vi publicerar projektet direkt istället för hela lösningen
+      # Vi pekar direkt på projektfilen för att undvika output-fel
       run: dotnet publish EncryptionApi/EncryptionApi.csproj -c Release -o ./publish
 
     - name: Zip artifact
       run: cd ./publish && zip -r ../deploy.zip .
 
-    - name: Deploy to EB
+    - name: Deploy to Elastic Beanstalk
       uses: einaregilsson/beanstalk-deploy@v21
       with:
         aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         application_name: ExamProject
         environment_name: ExamProject-env-env
-        version_label: "v-${{ github.run_id }}-${{ github.run_number }}"
+        version_label: "ver-${{ github.run_id }}-${{ github.run_number }}"
         region: eu-north-1
         deployment_package: deploy.zip
+        wait_for_deployment: true
+        wait_for_environment_recovery: true
